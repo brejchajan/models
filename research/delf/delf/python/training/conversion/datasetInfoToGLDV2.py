@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-11-19T20:55:25+01:00
+# @Last modified time: 2020-11-19T21:07:19+01:00
 
 import argparse as ap
 import glob
@@ -100,6 +100,13 @@ def getAllowedTypes(args):
     return allowed_types
 
 
+def resizeImageWidth(img, new_img_w):
+    img_h = img.shape[0]
+    img_w = img.shape[1]
+    new_img_h = int((float(img_h) / float(img_w)) * 512)
+    return cv2.resize(img, (new_img_w, new_img_h))
+
+
 def consolidateQueryImage(path, img_name, image_out_dir, class_id, ext=".jpg"):
     image_input_path = os.path.join(path, img_name)
     if not os.path.exists(image_input_path):
@@ -110,20 +117,13 @@ def consolidateQueryImage(path, img_name, image_out_dir, class_id, ext=".jpg"):
 
     img_name_parts = os.path.splitext(img_name)
     img_name_base = img_name_parts[0]
-    img_name_ext = img_name_parts[1]
     image_output_path = os.path.join(image_out_dir, img_name_base + ext)
 
     # check whether the output image already exists, if no, we proccess it
     if not os.path.exists(image_output_path):
-        if img_name_ext != ext:
-            # extension of existing file is not the same as requested
-            # we need to load the image and save it in the requested format
-            img = cv2.imread(image_input_path)
-            cv2.imwrite(image_output_path, img)
-        else:
-            # the file is in requested format, we just copy it since it is
-            # faster than re-encoding
-            shutil.copyfile(image_input_path, image_output_path)
+        img = cv2.imread(image_input_path)
+        img = resizeImageWidth(img, 512)
+        cv2.imwrite(image_output_path, img)
 
 
 def consolidateDatabaseImage(path, img_name, image_out_dir,
@@ -133,7 +133,9 @@ def consolidateDatabaseImage(path, img_name, image_out_dir,
     # database modality is inferred from the input path, and can be:
     # segments, silhouettes, depth.
     modality_subtype = os.path.basename(path).split("_")[1]
-    image_input_path = os.path.join(path, img_name + "_" + modality_subtype + curr_ext)
+    image_input_path = os.path.join(
+        path, img_name + "_" + modality_subtype + curr_ext
+    )
     if not os.path.exists(image_input_path):
         curr_ext = ".exr"
         image_input_path = os.path.join(path, img_name + curr_ext)
@@ -152,6 +154,7 @@ def consolidateDatabaseImage(path, img_name, image_out_dir,
     # check whether the output image already exists, if no, we proccess it
     if not os.path.exists(image_output_path):
         img = cv2.imread(image_input_path)
+        img = resizeImageWidth(img, 512)
         cv2.imwrite(image_output_path, img)
 
 
