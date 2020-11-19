@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-11-19T20:54:06+01:00
+# @Last modified time: 2020-11-19T20:55:25+01:00
 
 import argparse as ap
 import glob
@@ -21,7 +21,7 @@ def buildArgumentParser():
         metavar="input-dir"
     )
     parser.add_argument(
-        "output_pathdir", help="Dir where the output dataset csv file will be \
+        "output_dir", help="Dir where the output dataset csv file will be \
         stored.",
         metavar="output-dir"
     )
