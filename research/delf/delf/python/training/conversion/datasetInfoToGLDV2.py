@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-11-19T20:32:03+01:00
+# @Last modified time: 2020-11-19T20:54:06+01:00
 
 import argparse as ap
 import glob
@@ -21,9 +21,9 @@ def buildArgumentParser():
         metavar="input-dir"
     )
     parser.add_argument(
-        "output_dir", help="Dir where the output dataset csv file will be \
+        "output_pathdir", help="Dir where the output dataset csv file will be \
         stored.",
-        metavar="output_dir"
+        metavar="output-dir"
     )
     parser.add_argument(
         "--filter", metavar="N", type=int, nargs="+",
@@ -108,7 +108,7 @@ def consolidateQueryImage(path, img_name, image_out_dir, class_id, ext=".jpg"):
             + image_input_path
         )
 
-    img_name_parts = os.path.splitext(img_name)[0]
+    img_name_parts = os.path.splitext(img_name)
     img_name_base = img_name_parts[0]
     img_name_ext = img_name_parts[1]
     image_output_path = os.path.join(image_out_dir, img_name_base + ext)
@@ -130,7 +130,10 @@ def consolidateDatabaseImage(path, img_name, image_out_dir,
                              class_id, ext=".jpg"):
     # database images are either in .png, or in .exr
     curr_ext = ".png"
-    image_input_path = os.path.join(path, img_name + curr_ext)
+    # database modality is inferred from the input path, and can be:
+    # segments, silhouettes, depth.
+    modality_subtype = os.path.basename(path).split("_")[1]
+    image_input_path = os.path.join(path, img_name + "_" + modality_subtype + curr_ext)
     if not os.path.exists(image_input_path):
         curr_ext = ".exr"
         image_input_path = os.path.join(path, img_name + curr_ext)
