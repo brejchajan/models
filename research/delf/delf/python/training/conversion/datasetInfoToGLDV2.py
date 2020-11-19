@@ -3,14 +3,14 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-11-19T21:07:19+01:00
+# @Last modified time: 2020-11-19T21:10:22+01:00
 
 import argparse as ap
 import glob
 import os
 import sys
 import cv2
-import shutil
+from tqdm import tqdm
 
 
 def buildArgumentParser():
@@ -195,7 +195,7 @@ def buildGLDV2Dataset(args):
     dataset = loadAndParseCSVDatasets(args)
     allowed_types = getAllowedTypes(args)
     output_dataset = []
-    for row in dataset:
+    for row in tqdm(dataset):
         if row[0] in allowed_types:
             # add this modality to the output
             try:
