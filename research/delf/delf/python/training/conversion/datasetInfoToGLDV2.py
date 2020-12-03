@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-12-03T12:41:26+01:00
+# @Last modified time: 2020-12-03T12:51:39+01:00
 
 import argparse as ap
 import glob
@@ -247,9 +247,10 @@ def buildGLDV2Dataset(args):
                 img_id = img_base.replace('/', '_')
 
                 output_dataset.append([img_id, row[3], row[1]])
-            except RuntimeError:
+            except RuntimeError as re:
                 print(
                     "Unable to process image file " + row[3]
+                    + ", reason: " + str(re)
                     + ", file was skipped.", file=sys.stderr
                 )
 
