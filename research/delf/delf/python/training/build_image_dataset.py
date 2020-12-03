@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-12-03T20:17:40+01:00
+# @Last modified time: 2020-12-03T21:51:21+01:00
 
 
 
@@ -214,7 +214,6 @@ def _process_image(filename):
       pt = Imath.PixelType(Imath.PixelType.FLOAT)
       img_exr = OpenEXR.InputFile(filename)
       dw = img_exr.header()['dataWindow']
-      dw = img_exr.header()['dataWindow']
       size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
       depthstr = img_exr.channel('R', pt)
       depth = np.frombuffer(depthstr, dtype = np.float32)
@@ -223,7 +222,8 @@ def _process_image(filename):
       image = tf.convert_to_tensor(
         np.concatenate([depth, depth, depth], axis=2)
       )
-      image_data = tf.io.serialize_tensor(tf.dtypes.cast(image, tf.float32)).numpy()
+      image_data = tf.ensure_shape(tf.dtypes.cast(image, tf.float32), [size[1], size[0], 3])
+      image_data = tf.io.serialize_tensor().numpy()
   else:
       # Read the image file.
       with tf.io.gfile.GFile(filename, 'rb') as f:
