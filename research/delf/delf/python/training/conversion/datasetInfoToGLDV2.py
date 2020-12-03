@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-12-03T13:21:45+01:00
+# @Last modified time: 2020-12-03T19:38:24+01:00
 
 import argparse as ap
 import glob
@@ -13,6 +13,7 @@ import cv2
 import OpenEXR, Imath
 import numpy as np
 from tqdm import tqdm
+import shutil
 
 
 def buildArgumentParser():
@@ -195,6 +196,7 @@ def consolidateDatabaseImage(path, img_name, image_out_dir,
             img = cv2.imread(image_input_path)
             img = resizeImageWidth(img, 512)
             cv2.imwrite(image_output_path, img)
+    return image_output_path
 
 
 def consolidateImage(args, type, img_name, class_id):
@@ -202,13 +204,14 @@ def consolidateImage(args, type, img_name, class_id):
     if not os.path.exists(image_out_dir):
         os.makedirs(image_out_dir)
     if type == "query":
-        consolidateQueryImage(
+        img_op = consolidateQueryImage(
             args.with_images[0], img_name, image_out_dir, class_id)
     else:
-        consolidateDatabaseImage(
+        img_op = consolidateDatabaseImage(
             args.with_images[1], img_name, image_out_dir, class_id,
             transformation=args.transformation
         )
+    return img_op
 
 
 def writeGLDV2DatasetCSV(dataset, output_path, setname):
@@ -231,8 +234,33 @@ def writeGLDV2DatasetCSV(dataset, output_path, setname):
             file.write("\n")
 
 
+def calculateQueryDatabaseRatioPerClass(dataset):
+    query_cnt = {}
+    database_cnt = {}
+    classes = set()
+    for row in dataset:
+        cl = row[1]
+        if row[0] == "query":
+            if cl not in query_cnt.keys():
+                query_cnt[cl] = 1
+                classes.add(cl)
+            else:
+                query_cnt[cl] += 1
+        else:
+            if cl not in database_cnt.keys():
+                database_cnt[cl] = 1
+                classes.add(cl)
+            else:
+                database_cnt[cl] += 1
+    q_db_ratio = {}
+    for cl in classes:
+        q_db_ratio[cl] = float(query_cnt[cl]) / float(database_cnt[cl])
+    return q_db_ratio
+
+
 def buildGLDV2Dataset(args):
     dataset = loadAndParseCSVDatasets(args)
+    q_db_ratio = calculateQueryDatabaseRatioPerClass(dataset)
     allowed_types = getAllowedTypes(args)
     output_dataset = []
     for row in tqdm(dataset):
@@ -240,7 +268,7 @@ def buildGLDV2Dataset(args):
             # add this modality to the output
             try:
                 if args.with_images:
-                    consolidateImage(args, row[0], row[3], row[1])
+                    image_outpath = consolidateImage(args, row[0], row[3], row[1])
                 img_base = os.path.splitext(row[3])[0]
 
                 # database images are defined as tile_x_y/image_id_for_tile
@@ -249,6 +277,19 @@ def buildGLDV2Dataset(args):
                 img_id = img_base.replace('/', '_')
 
                 output_dataset.append([img_id, row[3], row[1]])
+
+                # we balance query images by repeating them according to the
+                # q_db_datio in given class
+                if row[0] == "query":
+                    num_repeat = np.round(1.0 / q_db_ratio[row[1]])
+                    parts = os.path.splitext(image_outpath)
+                    for idx in range(0, num_repeat):
+                        cp_img_base_path = parts[0] + "_copy_" + str(idx)
+                        cp_img_path = cp_img_base_path + parts[1]
+                        cp_img_base = os.path.basename(cp_img_base_path)
+                        shutil.copy(image_outpath, cp_img_path)
+                        output_dataset.append([cp_img_base, cp_img_base + parts[1], row[1]])
+
             except RuntimeError as re:
                 print(
                     "Unable to process image file " + row[3]

@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-12-03T15:56:26+01:00
+# @Last modified time: 2020-12-03T18:01:52+01:00
 
 
 
@@ -223,7 +223,7 @@ def _process_image(filename):
       image = tf.convert_to_tensor(
         np.concatenate([depth, depth, depth], axis=2)
       )
-      image_data = tf.io.serialize_tensor(image)
+      image_data = tf.io.serialize_tensor(image).numpy()
   else:
       # Read the image file.
       with tf.io.gfile.GFile(filename, 'rb') as f:
@@ -231,6 +231,7 @@ def _process_image(filename):
 
       # Decode the RGB JPEG.
       image = tf.io.decode_jpeg(image_data, channels=3)
+      image_data = tf.io.serialize_tensor(image).numpy()
 
   # Check that image converted to RGB
   if len(image.shape) != 3:
@@ -273,39 +274,21 @@ def _convert_to_example(file_id, image_buffer, height, width, label=None):
   Returns:
     Example proto.
   """
-  if not isinstance(image_buffer, (bytes, bytearray)):
-      # process EXR image
-      colorspace = 'RGB'
-      channels = 3
-      image_format = 'EXR'
-      features = {
-          'image/height': _int64_feature(height),
-          'image/width': _int64_feature(width),
-          'image/colorspace': _bytes_feature(colorspace.encode('utf-8')),
-          'image/channels': _int64_feature(channels),
-          'image/format': _bytes_feature(image_format.encode('utf-8')),
-          'image/id': _bytes_feature(file_id.encode('utf-8')),
-          'image/encoded': _bytes_feature(image_buffer.numpy())
-      }
-      if label is not None:
-        features['image/class/label'] = _int64_feature(label)
-      example = tf.train.Example(features=tf.train.Features(feature=features))
-  else:
-      colorspace = 'RGB'
-      channels = 3
-      image_format = 'JPEG'
-      features = {
-          'image/height': _int64_feature(height),
-          'image/width': _int64_feature(width),
-          'image/colorspace': _bytes_feature(colorspace.encode('utf-8')),
-          'image/channels': _int64_feature(channels),
-          'image/format': _bytes_feature(image_format.encode('utf-8')),
-          'image/id': _bytes_feature(file_id.encode('utf-8')),
-          'image/encoded': _bytes_feature(image_buffer)
-      }
-      if label is not None:
-        features['image/class/label'] = _int64_feature(label)
-      example = tf.train.Example(features=tf.train.Features(feature=features))
+  colorspace = 'RGB'
+  channels = 3
+  image_format = 'JPEG'
+  features = {
+      'image/height': _int64_feature(height),
+      'image/width': _int64_feature(width),
+      'image/colorspace': _bytes_feature(colorspace.encode('utf-8')),
+      'image/channels': _int64_feature(channels),
+      'image/format': _bytes_feature(image_format.encode('utf-8')),
+      'image/id': _bytes_feature(file_id.encode('utf-8')),
+      'image/encoded': _bytes_feature(image_buffer)
+  }
+  if label is not None:
+    features['image/class/label'] = _int64_feature(label)
+  example = tf.train.Example(features=tf.train.Features(feature=features))
 
   return example
 
