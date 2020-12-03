@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-12-03T13:19:38+01:00
+# @Last modified time: 2020-12-03T13:21:45+01:00
 
 import argparse as ap
 import glob
@@ -147,7 +147,7 @@ def loadEXRImage(filename):
 
 
 def saveEXRImage(filename, img, compression):
-    header = OpenEXR.header(img.shape[1], img.shape[0])
+    header = OpenEXR.Header(img.shape[1], img.shape[0])
     header['compression'] = compression
     exr = OpenEXR.OutputFile(filename, header)
     exr.writePixels({'R': img})
