@@ -129,13 +129,18 @@ def _ParseFunction(example, name_to_features, image_size, augmentation):
 
   image = parsed_example['image/encoded']
   image = tf.io.parse_tensor(image, tf.float32)
+  print(image)
   mean = tf.math.reduce_max(image)
   image = NormalizeImages(
       image, pixel_value_scale=mean, pixel_value_offset=mean)
   if augmentation:
     image = _ImageNetCrop(image)
   else:
-    image = tf.image.resize(image, [image_size, image_size])
+    try:
+        image = tf.image.resize(image, [image_size, image_size])
+    except ValueError:
+        image = tf.ensure_shape(image, [512, 512, 3])
+        image = tf.image.resize(image, [image_size, image_size])
     image.set_shape([image_size, image_size, 3])
 
   # Parse to get label.
@@ -185,7 +190,7 @@ def CreateDataset(file_pattern,
       image_size=image_size,
       augmentation=augmentation)
   dataset = dataset.map(customized_parse_func)
-  dataset = dataset.flat_map(lambda x: tf.data.Dataset().from_tensor_slices(x))
+  #dataset = dataset.flat_map(lambda x: tf.data.Dataset().from_tensor_slices(x))
   dataset = dataset.batch(batch_size)
 
 
