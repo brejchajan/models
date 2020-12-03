@@ -1,3 +1,12 @@
+# @Author: Jan Brejcha <janbrejcha>
+# @Date:   2020-12-03T12:42:09+01:00
+# @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
+# @Project: Locate
+# @Last modified by:   janbrejcha
+# @Last modified time: 2020-12-03T15:43:45+01:00
+
+
+
 # Lint as: python3
 # Copyright 2020 The TensorFlow Authors. All Rights Reserved.
 #
@@ -25,6 +34,7 @@ from __future__ import print_function
 import functools
 
 import tensorflow as tf
+import numpy as np
 
 
 class _GoogleLandmarksInfo(object):
@@ -117,19 +127,41 @@ def _ParseFunction(example, name_to_features, image_size, augmentation):
   """
   parsed_example = tf.io.parse_single_example(example, name_to_features)
   # Parse to get image.
-  image = parsed_example['image/encoded']
-  image = tf.io.decode_jpeg(image)
-  image = NormalizeImages(
-      image, pixel_value_scale=128.0, pixel_value_offset=128.0)
-  if augmentation:
-    image = _ImageNetCrop(image)
-  else:
-    image = tf.image.resize(image, [image_size, image_size])
-    image.set_shape([image_size, image_size, 3])
-  # Parse to get label.
-  label = parsed_example['image/class/label']
+  format = parsed_example['image/format'].numpy().decode('utf-8')
+  id = parsed_example['image/id'].numpy().decode('utf-8')
 
-  return image, label
+  # numload is a parameter for balancing the dataset: real query images
+  # will be added into the dataset <numload> times.
+  numload = 10
+  if tf.strings.regex_full_match(id, "alps_tile_.*").numpy() == True:
+      numload = 1
+  res = []
+  for idx in range(0, numload):
+      if format == "EXR":
+          image = parsed_example['image/encoded']
+          image = tf.io.parse_tensor(image)
+          image = NormalizeImages(
+              image, pixel_value_scale=150.0, pixel_value_offset=150.0)
+          if augmentation:
+            image = _ImageNetCrop(image)
+          else:
+            image = tf.image.resize(image, [image_size, image_size])
+            image.set_shape([image_size, image_size, 3])
+      else:
+          image = parsed_example['image/encoded']
+          image = tf.io.decode_jpeg(image)
+          image = NormalizeImages(
+              image, pixel_value_scale=128.0, pixel_value_offset=128.0)
+          if augmentation:
+            image = _ImageNetCrop(image)
+          else:
+            image = tf.image.resize(image, [image_size, image_size])
+            image.set_shape([image_size, image_size, 3])
+          # Parse to get label.
+          label = parsed_example['image/class/label']
+      res.append((image, label))
+
+  return np.array(res)
 
 
 def CreateDataset(file_pattern,
@@ -173,7 +205,9 @@ def CreateDataset(file_pattern,
       image_size=image_size,
       augmentation=augmentation)
   dataset = dataset.map(customized_parse_func)
+  dataset = dataset.flat_map(lambda x: tf.data.Dataset().from_tensor_slices(x))
   dataset = dataset.batch(batch_size)
+
 
   return dataset
 
