@@ -3,13 +3,15 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-11-19T21:10:22+01:00
+# @Last modified time: 2020-12-03T12:41:26+01:00
 
 import argparse as ap
 import glob
 import os
 import sys
 import cv2
+import OpenEXR, Imath
+import numpy as np
 from tqdm import tqdm
 
 
@@ -46,6 +48,12 @@ def buildArgumentParser():
         "--set-name", help="Define the name of output set, \
         possible options are train, test, index. Default: train.",
         default="train"
+    )
+    parser.add_argument(
+        "--transformation", help="Define how to transform the database image. \
+        Designed for implementing capability to encode depth in various ways. \
+        Possible values: scale_1000: divides the database image by 1000.",
+        type=str
     )
     return parser
 
@@ -126,8 +134,27 @@ def consolidateQueryImage(path, img_name, image_out_dir, class_id, ext=".jpg"):
         cv2.imwrite(image_output_path, img)
 
 
+def loadEXRImage(filename):
+    pt = Imath.PixelType(Imath.PixelType.FLOAT)
+    img_exr = OpenEXR.InputFile(filename)
+    dw = img_exr.header()['dataWindow']
+    dw = img_exr.header()['dataWindow']
+    size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
+    depthstr = img_exr.channel('R', pt)
+    depth = np.frombuffer(depthstr, dtype = np.float32) / 1000.0
+    depth.shape = (size[1], size[0])
+    return depth, img_exr.header()
+
+
+def saveEXRImage(filename, img, compression):
+    header = OpenEXR.header(img.shape[1], img.shape[0])
+    header['compression'] = compression
+    exr = OpenEXR.OutputFile(filename, header)
+    exr.writePixels({'R': img})
+
+
 def consolidateDatabaseImage(path, img_name, image_out_dir,
-                             class_id, ext=".jpg"):
+                             class_id, ext=".jpg", transformation=None):
     # database images are either in .png, or in .exr
     curr_ext = ".png"
     # database modality is inferred from the input path, and can be:
@@ -149,13 +176,23 @@ def consolidateDatabaseImage(path, img_name, image_out_dir,
     # to get image id, which is globally unique, we add the tile
     # directory into the image name by replacing '/' with '_'.
     img_out_name = img_name.replace('/', '_')
-    image_output_path = os.path.join(image_out_dir, img_out_name + ext)
+    if curr_ext == ".exr":
+        image_output_path = os.path.join(image_out_dir, img_out_name + curr_ext)
+    else:
+        image_output_path = os.path.join(image_out_dir, img_out_name + ext)
 
     # check whether the output image already exists, if no, we proccess it
     if not os.path.exists(image_output_path):
-        img = cv2.imread(image_input_path)
-        img = resizeImageWidth(img, 512)
-        cv2.imwrite(image_output_path, img)
+        if curr_ext == ".exr":
+            img, header = loadEXRImage(image_input_path)
+            img = resizeImageWidth(img, 512)
+            if transformation == "scale_1000":
+                img = img / 1000.0
+            saveEXRImage(image_output_path, img, header['compression'])
+        else:
+            img = cv2.imread(image_input_path)
+            img = resizeImageWidth(img, 512)
+            cv2.imwrite(image_output_path, img)
 
 
 def consolidateImage(args, type, img_name, class_id):
@@ -167,7 +204,8 @@ def consolidateImage(args, type, img_name, class_id):
             args.with_images[0], img_name, image_out_dir, class_id)
     else:
         consolidateDatabaseImage(
-            args.with_images[1], img_name, image_out_dir, class_id
+            args.with_images[1], img_name, image_out_dir, class_id,
+            transformation=args.transformation
         )
 
 

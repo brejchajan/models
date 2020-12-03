@@ -1,3 +1,12 @@
+# @Author: Jan Brejcha <janbrejcha>
+# @Date:   2020-11-18T16:31:04+01:00
+# @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
+# @Project: Locate
+# @Last modified by:   janbrejcha
+# @Last modified time: 2020-12-03T12:39:18+01:00
+
+
+
 #!/usr/bin/python
 # Copyright 2020 Google Inc. All Rights Reserved.
 #
@@ -15,7 +24,8 @@
 # ==============================================================================
 """Converts landmark image data to TFRecords file format with Example protos.
 
-The image data set is expected to reside in JPEG files ends up with '.jpg'.
+The image data set is expected to reside in JPEG files that ends up with '.jpg'
+or in EXR files (for depth maps) that ends up with '.exr'.
 
 This script converts the training and testing data into
 a sharded data set consisting of TFRecord files
@@ -56,6 +66,7 @@ from absl import flags
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import OpenEXR, Imath
 
 FLAGS = flags.FLAGS
 
@@ -95,6 +106,13 @@ _TRAIN_SPLIT = 'train'
 _VALIDATION_SPLIT = 'validation'
 
 
+def _load_image_paths(image_dir):
+    image_paths = tf.io.gfile.glob(os.path.join(image_dir, '*.jpg'))
+    # .exr files are for depth maps
+    image_paths_exr = tf.io.gfile.glob(os.path.join(image_dir, '*.exr'))
+    image_paths = image_paths + image_paths_exr
+    return image_paths
+
 def _get_all_image_files_and_labels(name, csv_path, image_dir):
   """Process input and get the image file paths, image ids and the labels.
 
@@ -110,7 +128,7 @@ def _get_all_image_files_and_labels(name, csv_path, image_dir):
   Raises:
     ValueError: if input name is not supported.
   """
-  image_paths = tf.io.gfile.glob(os.path.join(image_dir, '*.jpg'))
+  image_paths = _load_image_paths(image_dir)
   file_ids = [os.path.basename(os.path.normpath(f))[:-4] for f in image_paths]
   if name == _TRAIN_SPLIT:
     with tf.io.gfile.GFile(csv_path, 'rb') as csv_file:
@@ -153,7 +171,8 @@ def _get_clean_train_image_files_and_labels(csv_path, image_dir):
       images[file_id]['file_id'] = file_id
 
   # Add the full image path to the dictionary of images.
-  image_paths = tf.io.gfile.glob(os.path.join(image_dir, '*.jpg'))
+  #image_paths = tf.io.gfile.glob(os.path.join(image_dir, '*.jpg'))
+  image_paths = _load_image_paths(image_dir)
   for image_path in image_paths:
     file_id = os.path.basename(os.path.normpath(image_path))[:-4]
     if file_id in images:
@@ -188,12 +207,29 @@ def _process_image(filename):
   Raises:
     ValueError: if parsed image has wrong number of dimensions or channels.
   """
-  # Read the image file.
-  with tf.io.gfile.GFile(filename, 'rb') as f:
-    image_data = f.read()
+  # in case we have EXR image, load the red channel to 3-channel float32 tensor
+  # since we expect the depth is stored in the red channel, encoded as float
+  img_ext = os.path.splitext(filename)[1]
+  if img_ext == '.exr':
+      pt = Imath.PixelType(Imath.PixelType.FLOAT)
+      img_exr = OpenEXR.InputFile(filename)
+      dw = img_exr.header()['dataWindow']
+      dw = img_exr.header()['dataWindow']
+      size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
+      depthstr = img_exr.channel('R', pt)
+      depth = np.frombuffer(depthstr, dtype = np.float32)
+      depth.shape = (size[1], size[0])
+      depth = np.expand_dims(depth, 2)
+      image = tf.convert_to_tensor(
+        np.concatenate([depth, depth, depth], axis=2)
+      )
+  else:
+      # Read the image file.
+      with tf.io.gfile.GFile(filename, 'rb') as f:
+        image_data = f.read()
 
-  # Decode the RGB JPEG.
-  image = tf.io.decode_jpeg(image_data, channels=3)
+      # Decode the RGB JPEG.
+      image = tf.io.decode_jpeg(image_data, channels=3)
 
   # Check that image converted to RGB
   if len(image.shape) != 3:
@@ -218,6 +254,11 @@ def _bytes_feature(value):
   return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
 
+def _float_feature(value):
+  """Returns a float_list from a float / double."""
+  return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
+
+
 def _convert_to_example(file_id, image_buffer, height, width, label=None):
   """Build an Example proto for the given inputs.
 
@@ -231,21 +272,39 @@ def _convert_to_example(file_id, image_buffer, height, width, label=None):
   Returns:
     Example proto.
   """
-  colorspace = 'RGB'
-  channels = 3
-  image_format = 'JPEG'
-  features = {
-      'image/height': _int64_feature(height),
-      'image/width': _int64_feature(width),
-      'image/colorspace': _bytes_feature(colorspace.encode('utf-8')),
-      'image/channels': _int64_feature(channels),
-      'image/format': _bytes_feature(image_format.encode('utf-8')),
-      'image/id': _bytes_feature(file_id.encode('utf-8')),
-      'image/encoded': _bytes_feature(image_buffer)
-  }
-  if label is not None:
-    features['image/class/label'] = _int64_feature(label)
-  example = tf.train.Example(features=tf.train.Features(feature=features))
+  if image_buffer.dtype == tf.float32:
+      # process EXR image
+      colorspace = 'RGB'
+      channels = 3
+      image_format = 'EXR'
+      features = {
+          'image/height': _int64_feature(height),
+          'image/width': _int64_feature(width),
+          'image/colorspace': _bytes_feature(colorspace.encode('utf-8')),
+          'image/channels': _int64_feature(channels),
+          'image/format': _bytes_feature(image_format.encode('utf-8')),
+          'image/id': _bytes_feature(file_id.encode('utf-8')),
+          'image/encoded': _float_feature(image_buffer)
+      }
+      if label is not None:
+        features['image/class/label'] = _int64_feature(label)
+      example = tf.train.Example(features=tf.train.Features(feature=features))
+  else:
+      colorspace = 'RGB'
+      channels = 3
+      image_format = 'JPEG'
+      features = {
+          'image/height': _int64_feature(height),
+          'image/width': _int64_feature(width),
+          'image/colorspace': _bytes_feature(colorspace.encode('utf-8')),
+          'image/channels': _int64_feature(channels),
+          'image/format': _bytes_feature(image_format.encode('utf-8')),
+          'image/id': _bytes_feature(file_id.encode('utf-8')),
+          'image/encoded': _bytes_feature(image_buffer)
+      }
+      if label is not None:
+        features['image/class/label'] = _int64_feature(label)
+      example = tf.train.Example(features=tf.train.Features(feature=features))
 
   return example
 
