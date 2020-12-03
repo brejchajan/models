@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-12-03T14:46:07+01:00
+# @Last modified time: 2020-12-03T15:56:26+01:00
 
 
 
@@ -223,7 +223,7 @@ def _process_image(filename):
       image = tf.convert_to_tensor(
         np.concatenate([depth, depth, depth], axis=2)
       )
-      image_data = tf.io.serialize_tensor(image).numpy()
+      image_data = tf.io.serialize_tensor(image)
   else:
       # Read the image file.
       with tf.io.gfile.GFile(filename, 'rb') as f:
@@ -273,7 +273,7 @@ def _convert_to_example(file_id, image_buffer, height, width, label=None):
   Returns:
     Example proto.
   """
-  if image_buffer.dtype == tf.float32:
+  if not isinstance(image_buffer, (bytes, bytearray)):
       # process EXR image
       colorspace = 'RGB'
       channels = 3
@@ -285,7 +285,7 @@ def _convert_to_example(file_id, image_buffer, height, width, label=None):
           'image/channels': _int64_feature(channels),
           'image/format': _bytes_feature(image_format.encode('utf-8')),
           'image/id': _bytes_feature(file_id.encode('utf-8')),
-          'image/encoded': _bytes_feature(image_buffer)
+          'image/encoded': _bytes_feature(image_buffer.numpy())
       }
       if label is not None:
         features['image/class/label'] = _int64_feature(label)
