@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-12-03T18:01:52+01:00
+# @Last modified time: 2020-12-03T20:17:40+01:00
 
 
 
@@ -223,7 +223,7 @@ def _process_image(filename):
       image = tf.convert_to_tensor(
         np.concatenate([depth, depth, depth], axis=2)
       )
-      image_data = tf.io.serialize_tensor(image).numpy()
+      image_data = tf.io.serialize_tensor(tf.dtypes.cast(image, tf.float32)).numpy()
   else:
       # Read the image file.
       with tf.io.gfile.GFile(filename, 'rb') as f:
@@ -231,7 +231,7 @@ def _process_image(filename):
 
       # Decode the RGB JPEG.
       image = tf.io.decode_jpeg(image_data, channels=3)
-      image_data = tf.io.serialize_tensor(image).numpy()
+      image_data = tf.io.serialize_tensor(tf.dtypes.cast(image, tf.float32)).numpy()
 
   # Check that image converted to RGB
   if len(image.shape) != 3:
