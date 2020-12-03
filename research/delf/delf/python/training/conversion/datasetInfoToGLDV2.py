@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-12-03T12:51:39+01:00
+# @Last modified time: 2020-12-03T13:19:38+01:00
 
 import argparse as ap
 import glob
@@ -165,7 +165,9 @@ def consolidateDatabaseImage(path, img_name, image_out_dir,
     )
     if not os.path.exists(image_input_path):
         curr_ext = ".exr"
-        image_input_path = os.path.join(path, img_name + curr_ext)
+        image_input_path = os.path.join(
+            path, img_name + "_" + modality_subtype + curr_ext
+        )
     if not os.path.exists(image_input_path):
         raise RuntimeError(
             "Input database image does not exist at path: "
