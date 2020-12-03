@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-12-03T18:05:54+01:00
+# @Last modified time: 2020-12-03T20:19:41+01:00
 
 
 
@@ -128,7 +128,7 @@ def _ParseFunction(example, name_to_features, image_size, augmentation):
   parsed_example = tf.io.parse_single_example(example, name_to_features)
 
   image = parsed_example['image/encoded']
-  image = tf.io.parse_tensor(image)
+  image = tf.io.parse_tensor(image, tf.float32)
   mean = tf.math.reduce_max(image)
   image = NormalizeImages(
       image, pixel_value_scale=mean, pixel_value_offset=mean)
