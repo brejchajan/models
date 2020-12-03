@@ -133,6 +133,7 @@ def consolidateQueryImage(path, img_name, image_out_dir, class_id, ext=".jpg"):
         img = cv2.imread(image_input_path)
         img = resizeImageWidth(img, 512)
         cv2.imwrite(image_output_path, img)
+    return image_output_path
 
 
 def loadEXRImage(filename):
@@ -283,7 +284,7 @@ def buildGLDV2Dataset(args):
                 if row[0] == "query":
                     num_repeat = np.round(1.0 / q_db_ratio[row[1]])
                     parts = os.path.splitext(image_outpath)
-                    for idx in range(0, num_repeat):
+                    for idx in range(0, int(num_repeat)):
                         cp_img_base_path = parts[0] + "_copy_" + str(idx)
                         cp_img_path = cp_img_base_path + parts[1]
                         cp_img_base = os.path.basename(cp_img_base_path)
