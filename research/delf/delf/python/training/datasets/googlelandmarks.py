@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-12-04T09:09:26+01:00
+# @Last modified time: 2020-12-04T09:10:19+01:00
 
 
 
@@ -131,7 +131,7 @@ def _ParseFunction(example, name_to_features, image_size, augmentation):
   img_h = parsed_example['image/height']
   img_ch = parsed_example['image/channels']
   image = tf.io.parse_tensor(image, tf.float32)
-  image = tf.ensure_shape(image, [img_h, imh_w, img_ch])
+  image = tf.ensure_shape(image, [img_h, img_w, img_ch])
   mean = tf.math.reduce_max(image)
   image = NormalizeImages(
       image, pixel_value_scale=mean, pixel_value_offset=mean)
