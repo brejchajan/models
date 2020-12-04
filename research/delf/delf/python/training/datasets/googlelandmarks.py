@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-12-03T20:19:41+01:00
+# @Last modified time: 2020-12-04T09:09:26+01:00
 
 
 
@@ -126,21 +126,23 @@ def _ParseFunction(example, name_to_features, image_size, augmentation):
     label: a `Tensor`. The ground-truth label.
   """
   parsed_example = tf.io.parse_single_example(example, name_to_features)
-
   image = parsed_example['image/encoded']
+  img_w = parsed_example['image/width']
+  img_h = parsed_example['image/height']
+  img_ch = parsed_example['image/channels']
   image = tf.io.parse_tensor(image, tf.float32)
-  print(image)
+  image = tf.ensure_shape(image, [img_h, imh_w, img_ch])
   mean = tf.math.reduce_max(image)
   image = NormalizeImages(
       image, pixel_value_scale=mean, pixel_value_offset=mean)
   if augmentation:
     image = _ImageNetCrop(image)
   else:
-    try:
-        image = tf.image.resize(image, [image_size, image_size])
-    except ValueError:
-        image = tf.ensure_shape(image, [512, 512, 3])
-        image = tf.image.resize(image, [image_size, image_size])
+    #try:
+    image = tf.image.resize(image, [image_size, image_size])
+    #except ValueError:
+    #    image = tf.ensure_shape(image, [512, 512, 3])
+    #    image = tf.image.resize(image, [image_size, image_size])
     image.set_shape([image_size, image_size, 3])
 
   # Parse to get label.
