@@ -24,6 +24,7 @@ from PIL import ImageFile
 import tensorflow as tf
 import OpenEXR, Imath
 import os
+import cv2
 
 # To avoid PIL crashing for truncated (corrupted) images.
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -113,7 +114,8 @@ def ResizeImage(image, config, resize_factor=1.0):
   scale_factors = np.array([new_shape[1] / height, new_shape[0] / width],
                            dtype=float)
 
-  pil_image = Image.fromarray(image)
-  resized_image = np.array(pil_image.resize(new_shape, resample=Image.BILINEAR))
+  #pil_image = Image.fromarray(image)
+  resized_image = cv2.resize(image, new_shape)
+  #resized_image = np.array(pil_image.resize(new_shape, resample=Image.BILINEAR))
 
   return resized_image, scale_factors
