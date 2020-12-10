@@ -3,7 +3,7 @@
 # @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
 # @Project: Locate
 # @Last modified by:   janbrejcha
-# @Last modified time: 2020-12-04T09:10:19+01:00
+# @Last modified time: 2020-12-10T16:07:50+01:00
 
 
 
@@ -140,9 +140,9 @@ def _ParseFunction(example, name_to_features, image_size, augmentation):
   #image.set_shape([512, 512, 3])
   #except Exception as e:
   #  print(str(e))
-  mean = tf.math.reduce_max(image)
-  image = NormalizeImages(
-      image, pixel_value_scale=mean, pixel_value_offset=mean)
+  #mean = tf.math.reduce_max(image)
+  #image = NormalizeImages(
+  #    image, pixel_value_scale=mean, pixel_value_offset=mean)
   if augmentation:
     image = _ImageNetCrop(image)
   else:
