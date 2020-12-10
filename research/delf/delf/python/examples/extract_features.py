@@ -104,19 +104,18 @@ def main(unused_argv):
       print(f'Skipping {image_paths[i]}')
       continue
 
-    im = np.array(utils.RgbLoader(image_paths[i]))
-
+    im = np.array(utils.RgbLoader(image_paths[i])).astype(np.float32)
     # Extract and save features.
     extracted_features = extractor_fn(im)
-    #locations_out = extracted_features['local_features']['locations']
-    #descriptors_out = extracted_features['local_features']['descriptors']
-    #feature_scales_out = extracted_features['local_features']['scales']
-    #attention_out = extracted_features['local_features']['attention']
+    locations_out = extracted_features['local_features']['locations']
+    descriptors_out = extracted_features['local_features']['descriptors']
+    feature_scales_out = extracted_features['local_features']['scales']
+    attention_out = extracted_features['local_features']['attention']
     res.append(extracted_features['global_descriptor'])
-  np.save(os.path.join(cmd_args.output_dir, "delg_global.npy"), np.array(res))
-    #feature_io.WriteToFile(out_desc_fullpath, locations_out, feature_scales_out,
-    #                       descriptors_out, attention_out)
+    feature_io.WriteToFile(out_desc_fullpath, locations_out, feature_scales_out,
+                           descriptors_out, attention_out)
 
+  #np.save(os.path.join(cmd_args.output_dir, "delg_global.npy"), np.array(res))
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()

@@ -48,7 +48,9 @@ def loadEXRImage(path):
     depth = np.frombuffer(depthstr, dtype = np.float32)
     depth.shape = (size[1], size[0])
     depth = np.expand_dims(depth, 2)
-    return np.concatenate([depth, depth, depth], axis=2)
+    depth = np.concatenate([depth, depth, depth], axis=2)
+    #depth = cv2.resize(depth, (500, int(np.round(size[1]/size[0] * 500))))
+    return depth
 
 def RgbLoader(path):
   """Helper function to read image with PIL.

@@ -36,7 +36,6 @@ from __future__ import print_function
 
 import argparse
 import sys
-import utils
 import os
 
 import matplotlib
@@ -52,6 +51,7 @@ from skimage import transform
 
 from tensorflow.python.platform import app
 from delf import feature_io
+from delf import utils
 
 cmd_args = None
 
@@ -100,12 +100,16 @@ def main(unused_argv):
 
   img1_ext = os.path.splitext(cmd_args.image_1_path)[1]
   if img1_ext == '.exr':
-      img_1 = utils.loadEXRImage(cmd_args.image_1_path)
+      img_1 = (utils.loadEXRImage(cmd_args.image_1_path))
+      img_1_min = np.min(img_1)
+      img_1 = ((img_1 - img_1_min) / (np.max(img_1) - img_1_min))
   else:
       img_1 = mpimg.imread(cmd_args.image_1_path)
   img2_ext = os.path.splitext(cmd_args.image_2_path)[1]
   if img2_ext == '.exr':
-      img_2 = utils.loadEXRImage(cmd_args.image_2_path)
+      img_2 = (utils.loadEXRImage(cmd_args.image_2_path))
+      img_2_min = np.min(img_2)
+      img_2 = ((img_2 - img_2_min) / (np.max(img_2) - img_2_min))
   else:
       img_2 = mpimg.imread(cmd_args.image_2_path)
 
@@ -117,10 +121,11 @@ def main(unused_argv):
       locations_1_to_use,
       locations_2_to_use,
       np.column_stack((inlier_idxs, inlier_idxs)),
-      matches_color='b')
+      matches_color='b',
+      only_matches=True)
   ax.axis('off')
   ax.set_title('DELF correspondences')
-  plt.savefig(cmd_args.output_image, dpi=300)
+  plt.savefig(cmd_args.output_image, dpi=600)
 
 
 if __name__ == '__main__':
