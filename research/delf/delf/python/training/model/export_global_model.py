@@ -1,3 +1,12 @@
+# @Author: Jan Brejcha <janbrejcha>
+# @Date:   2020-11-18T16:31:04+01:00
+# @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
+# @Project: Locate
+# @Last modified by:   janbrejcha
+# @Last modified time: 2020-12-10T13:28:14+01:00
+
+
+
 # Lint as: python3
 # Copyright 2020 The TensorFlow Authors. All Rights Reserved.
 #
@@ -111,7 +120,7 @@ class _ExtractModule(tf.Module):
     self._model.load_weights(checkpoint_path)
 
   @tf.function(input_signature=[
-      tf.TensorSpec(shape=[None, None, 3], dtype=tf.uint8, name='input_image'),
+      tf.TensorSpec(shape=[None, None, 3], dtype=tf.float32, name='input_image'),
       tf.TensorSpec(shape=[None], dtype=tf.float32, name='input_scales'),
       tf.TensorSpec(
           shape=[None], dtype=tf.int32, name='input_global_scales_ind')
@@ -136,7 +145,7 @@ class _ExtractModule(tf.Module):
     return named_output_tensors
 
   @tf.function(input_signature=[
-      tf.TensorSpec(shape=[None, None, 3], dtype=tf.uint8, name='input_image')
+      tf.TensorSpec(shape=[None, None, 3], dtype=tf.float32, name='input_image')
   ])
   def ExtractFeaturesFixedScales(self, input_image):
     return self.ExtractFeatures(input_image, self._input_scales_tensor,
