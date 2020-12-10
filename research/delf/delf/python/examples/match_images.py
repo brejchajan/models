@@ -91,15 +91,15 @@ def main(unused_argv):
   inlier_idxs = np.nonzero(inliers)[0]
   feature.plot_matches(
       ax,
-      img_1,
-      img_2,
+      img_1[:, :, :3],
+      img_2[:, :, :3],
       locations_1_to_use,
       locations_2_to_use,
       np.column_stack((inlier_idxs, inlier_idxs)),
       matches_color='b')
   ax.axis('off')
   ax.set_title('DELF correspondences')
-  plt.savefig(cmd_args.output_image)
+  plt.savefig(cmd_args.output_image, dpi=300)
 
 
 if __name__ == '__main__':

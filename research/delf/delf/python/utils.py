@@ -22,6 +22,8 @@ import numpy as np
 from PIL import Image
 from PIL import ImageFile
 import tensorflow as tf
+import OpenEXR, Imath
+import os
 
 # To avoid PIL crashing for truncated (corrupted) images.
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -36,6 +38,19 @@ def RgbLoader(path):
   Returns:
     PIL image in RGB format.
   """
+  img_ext = os.path.splitext(path)[1]
+  if img_ext == '.exr':
+      pt = Imath.PixelType(Imath.PixelType.FLOAT)
+      img_exr = OpenEXR.InputFile(path)
+      dw = img_exr.header()['dataWindow']
+      size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
+      depthstr = img_exr.channel('R', pt)
+      depth = np.frombuffer(depthstr, dtype = np.float32)
+      depth.shape = (size[1], size[0])
+      depth = np.expand_dims(depth, 2)
+      return np.concatenate([depth, depth, depth], axis=2)
+
+
   with tf.io.gfile.GFile(path, 'rb') as f:
     img = Image.open(f)
     return img.convert('RGB')
