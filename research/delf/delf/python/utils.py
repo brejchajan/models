@@ -1,3 +1,12 @@
+# @Author: Jan Brejcha <janbrejcha>
+# @Date:   2020-12-10T13:00:39+01:00
+# @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
+# @Project: Locate
+# @Last modified by:   janbrejcha
+# @Last modified time: 2020-12-10T15:12:53+01:00
+
+
+
 # Copyright 2020 The TensorFlow Authors All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,6 +39,17 @@ import cv2
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
+def loadEXRImage(path):
+    pt = Imath.PixelType(Imath.PixelType.FLOAT)
+    img_exr = OpenEXR.InputFile(path)
+    dw = img_exr.header()['dataWindow']
+    size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
+    depthstr = img_exr.channel('R', pt)
+    depth = np.frombuffer(depthstr, dtype = np.float32)
+    depth.shape = (size[1], size[0])
+    depth = np.expand_dims(depth, 2)
+    return np.concatenate([depth, depth, depth], axis=2)
+
 def RgbLoader(path):
   """Helper function to read image with PIL.
 
@@ -41,15 +61,7 @@ def RgbLoader(path):
   """
   img_ext = os.path.splitext(path)[1]
   if img_ext == '.exr':
-      pt = Imath.PixelType(Imath.PixelType.FLOAT)
-      img_exr = OpenEXR.InputFile(path)
-      dw = img_exr.header()['dataWindow']
-      size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
-      depthstr = img_exr.channel('R', pt)
-      depth = np.frombuffer(depthstr, dtype = np.float32)
-      depth.shape = (size[1], size[0])
-      depth = np.expand_dims(depth, 2)
-      return np.concatenate([depth, depth, depth], axis=2)
+      return loadEXRImage(path)
 
 
   with tf.io.gfile.GFile(path, 'rb') as f:
