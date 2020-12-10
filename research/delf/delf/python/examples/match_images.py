@@ -1,3 +1,12 @@
+# @Author: Jan Brejcha <janbrejcha>
+# @Date:   2020-12-10T13:00:39+01:00
+# @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
+# @Project: Locate
+# @Last modified by:   janbrejcha
+# @Last modified time: 2020-12-10T15:15:10+01:00
+
+
+
 # Lint as: python3
 # Copyright 2017 The TensorFlow Authors All Rights Reserved.
 #
@@ -27,6 +36,8 @@ from __future__ import print_function
 
 import argparse
 import sys
+import utils
+import os
 
 import matplotlib
 # Needed before pyplot import for matplotlib to work properly.
@@ -86,8 +97,18 @@ def main(unused_argv):
 
   # Visualize correspondences, and save to file.
   _, ax = plt.subplots()
-  img_1 = mpimg.imread(cmd_args.image_1_path)
-  img_2 = mpimg.imread(cmd_args.image_2_path)
+
+  img1_ext = os.path.splitext(cmd_args.image_1_path)[1]
+  if img1_ext == '.exr':
+      img_1 = utils.loadEXRImage(cmd_args.image_1_path)
+  else:
+      img_1 = mpimg.imread(cmd_args.image_1_path)
+  img2_ext = os.path.splitext(cmd_args.image_2_path)[1]
+  if img2_ext == '.exr':
+      img_2 = utils.loadEXRImage(cmd_args.image_2_path)
+  else:
+      img_2 = mpimg.imread(cmd_args.image_2_path)
+
   inlier_idxs = np.nonzero(inliers)[0]
   feature.plot_matches(
       ax,
