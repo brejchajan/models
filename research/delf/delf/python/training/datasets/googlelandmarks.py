@@ -127,11 +127,19 @@ def _ParseFunction(example, name_to_features, image_size, augmentation):
   """
   parsed_example = tf.io.parse_single_example(example, name_to_features)
   image = parsed_example['image/encoded']
-  img_w = parsed_example['image/width']
-  img_h = parsed_example['image/height']
-  img_ch = parsed_example['image/channels']
   image = tf.io.parse_tensor(image, tf.float32)
-  image = tf.ensure_shape(image, [img_h, img_w, img_ch])
+  image.set_shape([None, None, 3])
+  #img_w = parsed_example['image/width']
+  #img_h = parsed_example['image/height']
+  #img_ch = parsed_example['image/channels']
+  #try:
+  #  image = tf.ensure_shape(tf.io.parse_tensor(image, tf.float32), (512, 512, 3))
+  #except Exception as e:
+  #  print(str(e))
+  #try:
+  #image.set_shape([512, 512, 3])
+  #except Exception as e:
+  #  print(str(e))
   mean = tf.math.reduce_max(image)
   image = NormalizeImages(
       image, pixel_value_scale=mean, pixel_value_offset=mean)
