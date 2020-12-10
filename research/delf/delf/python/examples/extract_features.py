@@ -37,6 +37,7 @@ from delf import delf_config_pb2
 from delf import feature_io
 from delf import utils
 from delf import extractor
+from tqdm import tqdm
 
 cmd_args = None
 
@@ -81,7 +82,9 @@ def main(unused_argv):
   extractor_fn = extractor.MakeExtractor(config)
 
   start = time.time()
-  for i in range(num_images):
+
+  res = []
+  for i in tqdm(range(num_images)):
     # Report progress once in a while.
     if i == 0:
       print('Starting to extract DELF features from images...')
@@ -105,13 +108,14 @@ def main(unused_argv):
 
     # Extract and save features.
     extracted_features = extractor_fn(im)
-    locations_out = extracted_features['local_features']['locations']
-    descriptors_out = extracted_features['local_features']['descriptors']
-    feature_scales_out = extracted_features['local_features']['scales']
-    attention_out = extracted_features['local_features']['attention']
-
-    feature_io.WriteToFile(out_desc_fullpath, locations_out, feature_scales_out,
-                           descriptors_out, attention_out)
+    #locations_out = extracted_features['local_features']['locations']
+    #descriptors_out = extracted_features['local_features']['descriptors']
+    #feature_scales_out = extracted_features['local_features']['scales']
+    #attention_out = extracted_features['local_features']['attention']
+    res.append(extracted_features['global_descriptor'])
+  np.save(os.path.join(cmd_args.output_dir, "delg_global.npy"), np.array(res))
+    #feature_io.WriteToFile(out_desc_fullpath, locations_out, feature_scales_out,
+    #                       descriptors_out, attention_out)
 
 
 if __name__ == '__main__':
