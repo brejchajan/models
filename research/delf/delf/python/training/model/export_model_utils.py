@@ -1,3 +1,12 @@
+# @Author: Jan Brejcha <janbrejcha>
+# @Date:   2020-11-18T16:31:04+01:00
+# @Email:  ibrejcha@fit.vutbr.cz, brejchaja@gmail.com
+# @Project: Locate
+# @Last modified by:   janbrejcha
+# @Last modified time: 2020-12-10T14:08:50+01:00
+
+
+
 # Lint as: python3
 # Copyright 2020 The TensorFlow Authors. All Rights Reserved.
 #
@@ -63,9 +72,9 @@ def ExtractLocalFeatures(image, image_scales, max_feature_num, abs_thres, iou,
   """
   original_image_shape_float = tf.gather(
       tf.dtypes.cast(tf.shape(image), tf.float32), [0, 1])
-
+  val = tf.math.reduce_max(image)
   image_tensor = gld.NormalizeImages(
-      image, pixel_value_offset=128.0, pixel_value_scale=128.0)
+      image, pixel_value_offset=val, pixel_value_scale=val)
   image_tensor = tf.expand_dims(image_tensor, 0, name='image/expand_dims')
 
   # Hard code the feature depth and receptive field parameters for now.
@@ -213,8 +222,9 @@ def ExtractGlobalFeatures(image,
   """
   original_image_shape_float = tf.gather(
       tf.dtypes.cast(tf.shape(image), tf.float32), [0, 1])
+  val = tf.math.reduce_max(image)
   image_tensor = gld.NormalizeImages(
-      image, pixel_value_offset=128.0, pixel_value_scale=128.0)
+      image, pixel_value_offset=val, pixel_value_scale=val)
   image_tensor = tf.expand_dims(image_tensor, 0, name='image/expand_dims')
 
   def _ResizeAndExtract(scale_index):
@@ -313,8 +323,9 @@ def ExtractLocalAndGlobalFeatures(image, image_scales, max_feature_num,
   """
   original_image_shape_float = tf.gather(
       tf.dtypes.cast(tf.shape(image), tf.float32), [0, 1])
+  val = tf.math.reduce_max(image)
   image_tensor = gld.NormalizeImages(
-      image, pixel_value_offset=128.0, pixel_value_scale=128.0)
+      image, pixel_value_offset=val, pixel_value_scale=val)
   image_tensor = tf.expand_dims(image_tensor, 0, name='image/expand_dims')
 
   # Hard code the receptive field parameters for now.
