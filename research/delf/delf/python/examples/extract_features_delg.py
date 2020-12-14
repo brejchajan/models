@@ -104,7 +104,7 @@ def main(unused_argv):
       print(f'Skipping {image_paths[i]}')
       continue
 
-    im = np.array(utils.RgbLoader(image_paths[i]))
+    im = np.array(utils.RgbLoader(image_paths[i])).astype(np.float32)
 
     # Extract and save features.
     extracted_features = extractor_fn(im)
