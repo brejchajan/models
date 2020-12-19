@@ -101,14 +101,14 @@ class BestCheckpointExporter:
     eval_logs_ext = copy.copy(eval_logs)
     eval_logs_ext['best_ckpt_global_step'] = global_step
     for name, value in eval_logs_ext.items():
-      eval_logs_ext[name] = str(orbit.utils.get_value(value))
+      eval_logs_ext[name] = float(orbit.utils.get_value(value))
     # Saving json file is very fast.
     with tf.io.gfile.GFile(self.best_ckpt_logs_path, 'w') as writer:
       writer.write(json.dumps(eval_logs_ext, indent=4) + '\n')
 
     # Saving the best checkpoint might be interrupted if the job got killed.
     for file_to_remove in tf.io.gfile.glob(self.best_ckpt_path + '*'):
-      tf.io.gfile.rmtree(file_to_remove)
+      tf.io.gfile.remove(file_to_remove)
     checkpoint.save(self.best_ckpt_path)
 
   @property
@@ -134,7 +134,7 @@ def create_trainer(params: config_definitions.ExperimentConfig,
   """Create trainer."""
   logging.info('Running default trainer.')
   model = task.build_model()
-  optimizer = base_trainer.create_optimizer(params.trainer, params.runtime)
+  optimizer = task.create_optimizer(params.trainer, params.runtime)
   return trainer_cls(
       params,
       task,

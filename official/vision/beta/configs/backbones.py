@@ -14,7 +14,7 @@
 # limitations under the License.
 # ==============================================================================
 """Backbones configurations."""
-from typing import Optional
+from typing import Optional, List
 
 # Import libraries
 import dataclasses
@@ -26,6 +26,7 @@ from official.modeling import hyperparams
 class ResNet(hyperparams.Config):
   """ResNet config."""
   model_id: int = 50
+  depth_multiplier: float = 1.0
   stem_type: str = 'v0'
   se_ratio: float = 0.0
   stochastic_depth_drop_rate: float = 0.0
@@ -36,6 +37,11 @@ class DilatedResNet(hyperparams.Config):
   """DilatedResNet config."""
   model_id: int = 50
   output_stride: int = 16
+  multigrid: Optional[List[int]] = None
+  stem_type: str = 'v0'
+  last_stage_repeats: int = 1
+  se_ratio: float = 0.0
+  stochastic_depth_drop_rate: float = 0.0
 
 
 @dataclasses.dataclass

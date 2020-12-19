@@ -56,8 +56,6 @@ class _DataAugmentationParams(object):
   central_fraction = 0.875
 
   random_reflection = False
-  input_rows = 321
-  input_cols = 321
 
 
 def NormalizeImages(images, pixel_value_scale=0.5, pixel_value_offset=0.5):
@@ -80,11 +78,12 @@ def NormalizeImages(images, pixel_value_scale=0.5, pixel_value_offset=0.5):
   return normalized_images
 
 
-def _ImageNetCrop(image):
+def _ImageNetCrop(image, image_size):
   """Imagenet-style crop with random bbox and aspect ratio.
 
   Args:
     image: a `Tensor`, image to crop.
+    image_size: an `int`. The image size for the decoded image, on each side.
 
   Returns:
     cropped_image: `Tensor`, cropped image.
@@ -105,7 +104,7 @@ def _ImageNetCrop(image):
   cropped_image.set_shape([None, None, 3])
 
   cropped_image = tf.image.resize(
-      cropped_image, [params.input_rows, params.input_cols], method='area')
+      cropped_image, [image_size, image_size], method='area')
   if params.random_reflection:
     cropped_image = tf.image.random_flip_left_right(cropped_image)
 
@@ -144,7 +143,7 @@ def _ParseFunction(example, name_to_features, image_size, augmentation):
   #image = NormalizeImages(
   #    image, pixel_value_scale=mean, pixel_value_offset=mean)
   if augmentation:
-    image = _ImageNetCrop(image)
+    image = _ImageNetCrop(image, image_size)
   else:
     #try:
     image = tf.image.resize(image, [image_size, image_size])
