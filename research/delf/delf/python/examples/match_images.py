@@ -108,6 +108,7 @@ def main(unused_argv):
   img2_ext = os.path.splitext(cmd_args.image_2_path)[1]
   if img2_ext == '.exr':
       img_2 = (utils.loadEXRImage(cmd_args.image_2_path))
+      print("max", np.max(img_2))
       img_2_min = np.min(img_2)
       img_2 = ((img_2 - img_2_min) / (np.max(img_2) - img_2_min))
   else:
@@ -122,7 +123,7 @@ def main(unused_argv):
       locations_2_to_use,
       np.column_stack((inlier_idxs, inlier_idxs)),
       matches_color='b',
-      only_matches=True)
+      only_matches=False)
   ax.axis('off')
   ax.set_title('DELF correspondences')
   plt.savefig(cmd_args.output_image, dpi=600)
