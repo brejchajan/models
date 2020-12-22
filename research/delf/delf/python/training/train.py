@@ -25,6 +25,7 @@ from __future__ import print_function
 
 import os
 import time
+import sys
 
 from absl import app
 from absl import flags
@@ -171,7 +172,14 @@ def _learning_rate_schedule(global_step_value, max_iters, initial_lr):
 def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
-
+  
+  physical_devices = tf.config.list_physical_devices('GPU')
+    try:
+      tf.config.experimental.set_memory_growth(physical_devices[0], True)
+    except:
+      # Invalid device or cannot modify virtual devices once initialized.
+      print("Could not set_memory_growth for physical GPU device 0", file=sys.stderr)
+      pass
   #-------------------------------------------------------------
   # Log flags used.
   logging.info('Running training script with\n')
