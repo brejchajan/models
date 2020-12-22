@@ -174,12 +174,13 @@ def main(argv):
     raise app.UsageError('Too many command-line arguments.')
   
   physical_devices = tf.config.list_physical_devices('GPU')
-    try:
-      tf.config.experimental.set_memory_growth(physical_devices[0], True)
-    except:
-      # Invalid device or cannot modify virtual devices once initialized.
-      print("Could not set_memory_growth for physical GPU device 0", file=sys.stderr)
-      pass
+  try:
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+    print("Allowed set_memory_growth for physical GPU device 0.")
+  except:
+    # Invalid device or cannot modify virtual devices once initialized.
+    print("Could not set_memory_growth for physical GPU device 0", file=sys.stderr)
+    pass
   #-------------------------------------------------------------
   # Log flags used.
   logging.info('Running training script with\n')
