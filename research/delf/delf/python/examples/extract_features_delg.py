@@ -104,7 +104,7 @@ def main(unused_argv):
       print(f'Skipping {image_paths[i]}')
       continue
 
-    im = np.array(utils.RgbLoader(image_paths[i])).astype(np.float32)
+    im = np.array(utils.RgbLoader(image_paths[i])).astype(np.float32) / cmd_args.divide
 
     # Extract and save features.
     extracted_features = extractor_fn(im)
@@ -144,5 +144,11 @@ if __name__ == '__main__':
       Directory where DELF features will be written to. Each image's features
       will be written to a file with same name, and extension replaced by .delf.
       """)
+  parser.add_argument(
+      '--divide',
+      type=float,
+      default=1.0,
+      help="Divides the image with the defined scalar value."
+  )
   cmd_args, unparsed = parser.parse_known_args()
   app.run(main=main, argv=[sys.argv[0]] + unparsed)
