@@ -49,7 +49,7 @@ flags.DEFINE_string(
     'validation_file_pattern', '/tmp/data/validation*',
     'File pattern of validation dataset files.')
 flags.DEFINE_enum(
-    'dataset_version', 'gld_v1', ['gld_v1', 'gld_v2', 'gld_v2_clean'],
+    'dataset_version', 'gld_v1', ['gld_v1', 'gld_v2', 'gld_v2_clean', 'alps'],
     'Google Landmarks dataset version, used to determine the'
     'number of classes.')
 #flags.DEFINE_integer('seed', 0, 'Seed to training dataset.')
@@ -172,7 +172,7 @@ def _learning_rate_schedule(global_step_value, max_iters, initial_lr):
 def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
-  
+
   physical_devices = tf.config.list_physical_devices('GPU')
   try:
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
