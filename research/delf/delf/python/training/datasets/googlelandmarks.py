@@ -39,7 +39,7 @@ import numpy as np
 
 class _GoogleLandmarksInfo(object):
   """Metadata about the Google Landmarks dataset."""
-  num_classes = {'gld_v1': 14951, 'gld_v2': 203094, 'gld_v2_clean': 81313}
+  num_classes = {'gld_v1': 14951, 'gld_v2': 203094, 'gld_v2_clean': 81313, 'alps': 2598}
 
 
 class _DataAugmentationParams(object):
@@ -73,9 +73,10 @@ def NormalizeImages(images, pixel_value_scale=0.5, pixel_value_offset=0.5):
     normalized_images: `Tensor`, normalized images.
   """
   images = tf.cast(images, tf.float32)
-  normalized_images = tf.math.divide(
-      tf.subtract(images, pixel_value_offset), pixel_value_scale)
-  return normalized_images
+  #normalized_images = tf.math.divide(
+  #    tf.subtract(images, pixel_value_offset), pixel_value_scale)
+  #return normalized_images
+  return images
 
 
 def _ImageNetCrop(image, image_size):
