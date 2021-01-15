@@ -2,3 +2,11 @@
 *~
 *pb2.py
 *pb2.pyc
+
+delf/python/delg/parameters/*
+delf/python/examples/data_landscapear
+delf/python/examples/data_locate/*
+delf/python/examples/matched_*
+delf/python/training/alps_photo_photo*
+delf/python/training/gldv2_dataset/*
+delf/python/training/testdataset/*
