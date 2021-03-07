@@ -1,0 +1,23 @@
+use_local_features: false
+use_global_features: true
+model_path: "/mnt/matylda1/ibrejcha/data/delg/Alps_photo_depth_query_resolution_depth_scaled_1000/training_nonorm_autoencoder/Alps_photo_depth_query_resolution_depth_scaled_1000_model_global"
+image_scales: .25
+image_scales: .3536
+image_scales: .5
+image_scales: .7071
+image_scales: 1.0
+image_scales: 1.4142
+image_scales: 2.0
+is_tf2_exported: true
+delf_local_config {
+  use_pca: false
+  max_feature_num: 1000
+  score_threshold: 100.0
+}
+delf_global_config {
+  use_pca: false
+  image_scales_ind: 3
+  image_scales_ind: 4
+  image_scales_ind: 5
+}
+max_image_size: 1024
