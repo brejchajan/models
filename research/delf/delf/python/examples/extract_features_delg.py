@@ -105,6 +105,7 @@ def main(unused_argv):
       continue
 
     im = np.array(utils.RgbLoader(image_paths[i])).astype(np.float32) / cmd_args.divide
+    #im = np.clip(im, 0, 255).astype(np.uint8)
 
     # Extract and save features.
     extracted_features = extractor_fn(im)
